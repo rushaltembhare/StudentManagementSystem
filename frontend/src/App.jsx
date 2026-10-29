@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect } from 'react';
 import "./App.css";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/students`;
@@ -13,6 +13,21 @@ const emptyForm = {
 };
 
 function App() {
+  useEffect(() => {
+    const fetchTheme = async () => {
+      try {
+        const response = await fetch('https://studentmanagementsystem-96qk.onrender.com/api/theme');
+        const data = await response.json();
+        if (data.theme) {
+          document.documentElement.style.setProperty('--primary-color', data.theme);
+        }
+      } catch (error) {
+        console.error('Error fetching theme:', error);
+      }
+    };
+
+    fetchTheme();
+  }, []);
   const [students, setStudents] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
@@ -113,27 +128,31 @@ function App() {
   }
 
   function handleEdit(student) {
-    const id = student._id || student.id;
+  const id = student._id || student.id;
 
-    if (!id) {
-      setError("This student record has no usable ID.");
-      return;
-    }
-
-    setForm({
-      studentId: student.studentId || "",
-      name: student.name || "",
-      email: student.email || "",
-      department: student.department || "",
-      semester: student.semester ?? "",
-      contact: student.contact || "",
-    });
-
-    setEditingId(id);
-    setMessage("");
-    setError("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!id) {
+    setError("This student record has no usable ID.");
+    return;
   }
+
+  setForm({
+    studentId: student.studentId || "",
+    name: student.name || "",
+    email: student.email || "",
+    department: student.department || "",
+    semester: student.semester ?? "",
+    contact: student.contact || "",
+  });
+
+  setEditingId(id);
+  setMessage("");
+  setError("");
+
+  document.querySelector(".form-panel")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}
 
   async function handleDelete(student) {
     const id = student._id || student.id;

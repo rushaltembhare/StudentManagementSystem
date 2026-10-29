@@ -1,4 +1,12 @@
 :root {
+  --primary-color: #3b82f6; /* default color */
+}
+
+/* Jahan hardcoded blue/orange color coded hai, wahan variable map apply karo */
+header, .navbar, button, table th {
+  background-color: var(--primary-color) !important;
+}
+:root {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #20243a;
   background: #f5f7fc;

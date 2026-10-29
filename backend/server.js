@@ -12,13 +12,6 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch((error) => {
-    console.error("MongoDB connection failed:", error.message);
-  });
-
 const studentSchema = new mongoose.Schema(
   {
     studentId: {
@@ -135,6 +128,16 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("MongoDB connected successfully");
+    
+  // Theme Fetch & Update API Routes
+app.get('/api/theme', async (req, res) => {
+  try {
+    const settings = await db.collection('settings').findOne({});
+    res.json({ theme: settings?.theme || '#3b82f6' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});  
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -143,3 +146,4 @@ mongoose
   .catch((error) => {
     console.error("MongoDB connection failed:", error.message);
   });
+  

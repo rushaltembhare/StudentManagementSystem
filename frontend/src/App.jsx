@@ -16,15 +16,32 @@ function App() {
   useEffect(() => {
     const fetchTheme = async () => {
       try {
+        // Backend se theme data mangwa rahe hain
         const response = await fetch('https://studentmanagementsystem-96qk.onrender.com/api/theme');
         const data = await response.json();
+        
         if (data.theme) {
-          document.documentElement.style.setProperty('--primary-color', data.theme);
+          // 1. Theme names ko exact Hex Color Codes se map kar rahe hain
+          const colorMap = {
+            orange: '#f97316',
+            blue: '#3b82f6',
+            green: '#22c55e',
+            purple: '#a855f7'
+          };
+
+          // 2. Agar "orange" mila toh `#f97316` use hoga, warna original value
+          const themeColor = colorMap[data.theme.toLowerCase()] || data.theme;
+
+          // 3. Document ke CSS variable (--primary-color) ko change kar rahe hain
+          document.documentElement.style.setProperty('--primary-color', themeColor);
         }
       } catch (error) {
         console.error('Error fetching theme:', error);
       }
     };
+
+    fetchTheme();
+  }, []);
 
     fetchTheme();
   }, []);

@@ -128,16 +128,25 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("MongoDB connected successfully");
-    
-  // Theme Fetch & Update API Routes
+
 app.get('/api/theme', async (req, res) => {
   try {
-    const settings = await db.collection('settings').findOne({});
-    res.json({ theme: settings?.theme || '#3b82f6' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    // MongoDB ke settings collection se theme document fetch karo
+    const setting = await db.collection('settings').findOne({});
+    
+    // Agar database me document mila, toh woh value do
+    if (setting && setting.theme) {
+      return res.json({ theme: setting.theme });
+    }
+    
+    // Agar collection khali hai (null), toh default 'orange' bhej do (crash mat hone do)
+    return res.json({ theme: 'orange' });
+  } catch (error) {
+    console.error('Theme API error:', error);
+    // Kisi bhi Mongo error par 500 dene ke bajaye safely default return karo
+    return res.json({ theme: 'orange' });
   }
-});  
+});
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

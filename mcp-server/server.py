@@ -1,16 +1,19 @@
 import os
-from mcp.server.fastmcp import FastMCP
 from pymongo import MongoClient
 
-# Initialize MCP Server
-mcp = FastMCP("student-management")
+# MCP v1 aur v2 dono ke liye compatibility handler
+try:
+    from mcp.server.fastmcp import FastMCP
+    mcp = FastMCP("student-management")
+except ModuleNotFoundError:
+    from mcp.server.mcpserver import MCPServer
+    mcp = MCPServer("student-management")
 
-# Replace this string with your REAL MongoDB Atlas connection URL
+# Tumhara MongoDB connection URL
 MONGO_URI = "mongodb+srv://student_api_user:clg_Personal.@studentcluster.rymwx5w.mongodb.net/studentDB?retryWrites=true&w=majority"
 
-# Connect to Database
 client = MongoClient(MONGO_URI)
-db = client["student_db"]  # Replace 'student_db' with your exact DB name
+db = client["student_db"]  # Tera exact database name
 
 @mcp.tool()
 def update_theme(color_name: str) -> str:

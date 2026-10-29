@@ -12,6 +12,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
+// Student Schema
 const studentSchema = new mongoose.Schema(
   {
     studentId: {
@@ -54,10 +55,12 @@ const studentSchema = new mongoose.Schema(
 
 const Student = mongoose.model("Student", studentSchema);
 
+// Home Route
 app.get("/", (req, res) => {
   res.send("Student Management API is running");
 });
 
+// Get All Students
 app.get("/api/students", async (req, res) => {
   try {
     const students = await Student.find().sort({ createdAt: -1 });
@@ -67,6 +70,7 @@ app.get("/api/students", async (req, res) => {
   }
 });
 
+// Get Single Student
 app.get("/api/students/:id", async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
@@ -81,6 +85,7 @@ app.get("/api/students/:id", async (req, res) => {
   }
 });
 
+// Create Student
 app.post("/api/students", async (req, res) => {
   try {
     const student = await Student.create(req.body);
@@ -91,6 +96,7 @@ app.post("/api/students", async (req, res) => {
   }
 });
 
+// Update Student
 app.put("/api/students/:id", async (req, res) => {
   try {
     const student = await Student.findByIdAndUpdate(
@@ -110,6 +116,7 @@ app.put("/api/students/:id", async (req, res) => {
   }
 });
 
+// Delete Student
 app.delete("/api/students/:id", async (req, res) => {
   try {
     const student = await Student.findByIdAndDelete(req.params.id);
@@ -124,30 +131,33 @@ app.delete("/api/students/:id", async (req, res) => {
   }
 });
 
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("MongoDB connected successfully");
-
+// Safe Dynamic Theme API Route
 app.get('/api/theme', async (req, res) => {
   try {
-    // MongoDB ke settings collection se theme document fetch karo
-    const setting = await db.collection('settings').findOne({});
+    // Check if Mongoose connection is ready
+    if (mongoose.connection.readyState !== 1) {
+      return res.json({ theme: 'orange' });
+    }
+
+    // Access raw collection safely via mongoose
+    const setting = await mongoose.connection.db.collection('settings').findOne({});
     
-    // Agar database me document mila, toh woh value do
     if (setting && setting.theme) {
       return res.json({ theme: setting.theme });
     }
-    
-    // Agar collection khali hai (null), toh default 'orange' bhej do (crash mat hone do)
+
     return res.json({ theme: 'orange' });
   } catch (error) {
     console.error('Theme API error:', error);
-    // Kisi bhi Mongo error par 500 dene ke bajaye safely default return karo
     return res.json({ theme: 'orange' });
   }
 });
 
+// Database Connection & Server Listener
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("MongoDB connected successfully");
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
@@ -155,4 +165,3 @@ app.get('/api/theme', async (req, res) => {
   .catch((error) => {
     console.error("MongoDB connection failed:", error.message);
   });
-  

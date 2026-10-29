@@ -13,26 +13,21 @@ const emptyForm = {
 };
 
 function App() {
+  // 1. Fetch Dynamic Theme
   useEffect(() => {
     const fetchTheme = async () => {
       try {
-        // Backend se theme data mangwa rahe hain
         const response = await fetch('https://studentmanagementsystem-96qk.onrender.com/api/theme');
         const data = await response.json();
         
         if (data.theme) {
-          // 1. Theme names ko exact Hex Color Codes se map kar rahe hain
           const colorMap = {
             orange: '#f97316',
             blue: '#3b82f6',
             green: '#22c55e',
             purple: '#a855f7'
           };
-
-          // 2. Agar "orange" mila toh `#f97316` use hoga, warna original value
           const themeColor = colorMap[data.theme.toLowerCase()] || data.theme;
-
-          // 3. Document ke CSS variable (--primary-color) ko change kar rahe hain
           document.documentElement.style.setProperty('--primary-color', themeColor);
         }
       } catch (error) {
@@ -43,8 +38,7 @@ function App() {
     fetchTheme();
   }, []);
 
-    fetchTheme();
-  }, []);
+  // 2. States
   const [students, setStudents] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
@@ -54,16 +48,14 @@ function App() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // 3. Load Students Data
   async function loadStudents() {
     setLoading(true);
     setError("");
 
     try {
       const response = await fetch(API_URL);
-
-      if (!response.ok) {
-        throw new Error("Could not load student records.");
-      }
+      if (!response.ok) throw new Error("Could not load student records.");
 
       const data = await response.json();
       setStudents(Array.isArray(data) ? data : []);
@@ -78,6 +70,7 @@ function App() {
     loadStudents();
   }, []);
 
+  // 4. Form Change & Submit Logic
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((previous) => ({ ...previous, [name]: value }));
@@ -112,10 +105,7 @@ function App() {
     };
 
     try {
-      const url = editingId
-        ? `${API_URL}/${editingId}`
-        : API_URL;
-
+      const url = editingId ? `${API_URL}/${editingId}` : API_URL;
       const response = await fetch(url, {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,17 +113,9 @@ function App() {
       });
 
       const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || "Unable to save student.");
 
-      if (!response.ok) {
-        throw new Error(result.message || "Unable to save student.");
-      }
-
-      setMessage(
-        editingId
-          ? "Student updated successfully."
-          : "Student added successfully."
-      );
-
+      setMessage(editingId ? "Student updated successfully." : "Student added successfully.");
       setForm(emptyForm);
       setEditingId(null);
       await loadStudents();
@@ -144,66 +126,56 @@ function App() {
     }
   }
 
+  // 5. Edit & Delete Logic
   function handleEdit(student) {
-  const id = student._id || student.id;
-
-  if (!id) {
-    setError("This student record has no usable ID.");
-    return;
-  }
-
-  setForm({
-    studentId: student.studentId || "",
-    name: student.name || "",
-    email: student.email || "",
-    department: student.department || "",
-    semester: student.semester ?? "",
-    contact: student.contact || "",
-  });
-
-  setEditingId(id);
-  setMessage("");
-  setError("");
-
-  document.querySelector(".form-panel")?.scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
-}
-
-  async function handleDelete(student) {
     const id = student._id || student.id;
-
     if (!id) {
       setError("This student record has no usable ID.");
       return;
     }
 
-    if (!window.confirm(`Delete the record for ${student.name}?`)) {
+    setForm({
+      studentId: student.studentId || "",
+      name: student.name || "",
+      email: student.email || "",
+      department: student.department || "",
+      semester: student.semester ?? "",
+      contact: student.contact || "",
+    });
+
+    setEditingId(id);
+    setMessage("");
+    setError("");
+
+    document.querySelector(".form-panel")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
+  async function handleDelete(student) {
+    const id = student._id || student.id;
+    if (!id) {
+      setError("This student record has no usable ID.");
       return;
     }
+
+    if (!window.confirm(`Delete the record for ${student.name}?`)) return;
 
     setMessage("");
     setError("");
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(result.message || "Unable to delete student.");
-      }
+      if (!response.ok) throw new Error(result.message || "Unable to delete student.");
 
       setMessage("Student deleted successfully.");
-
       if (editingId === id) {
         setEditingId(null);
         setForm(emptyForm);
       }
-
       await loadStudents();
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -217,6 +189,7 @@ function App() {
     setError("");
   }
 
+  // 6. Search Filter Logic
   const filteredStudents = students.filter((student) =>
     [
       student.studentId,
@@ -268,17 +241,8 @@ function App() {
           </div>
         </section>
 
-        {message && (
-          <div className="alert success" role="status">
-            {message}
-          </div>
-        )}
-
-        {error && (
-          <div className="alert error" role="alert">
-            {error}
-          </div>
-        )}
+        {message && <div className="alert success" role="status">{message}</div>}
+        {error && <div className="alert error" role="alert">{error}</div>}
 
         <section className="content-grid">
           <div className="panel form-panel">
@@ -361,24 +325,12 @@ function App() {
                 required
               />
 
-              <button
-                className="primary-button"
-                type="submit"
-                disabled={saving}
-              >
-                {saving
-                  ? "Saving..."
-                  : editingId
-                    ? "Save Changes"
-                    : "Add Student"}
+              <button className="primary-button" type="submit" disabled={saving}>
+                {saving ? "Saving..." : editingId ? "Save Changes" : "Add Student"}
               </button>
 
               {editingId && (
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={cancelEdit}
-                >
+                <button className="secondary-button" type="button" onClick={cancelEdit}>
                   Cancel Editing
                 </button>
               )}
@@ -461,7 +413,6 @@ function App() {
                               className="edit-button"
                               type="button"
                               onClick={() => handleEdit(student)}
-                              aria-label={`Edit ${student.name}`}
                             >
                               Edit
                             </button>
@@ -469,7 +420,6 @@ function App() {
                               className="delete-button"
                               type="button"
                               onClick={() => handleDelete(student)}
-                              aria-label={`Delete ${student.name}`}
                             >
                               Delete
                             </button>
